@@ -1,0 +1,277 @@
+﻿//-----------------------------------------------------------------------
+// <copyright file="ConfigAppSettings.cs" company="Some Company">
+//  Copyright (c) 2016 All Rights Reserved
+// </copyright>
+//-----------------------------------------------------------------------
+
+namespace YourProject.NameSpace.Configuration
+{<#@ template debug="true" hostSpecific="true" #>
+<#@ output extension=".cs" #>
+<#@ Assembly Name="System.Core.dll" #>
+<#@ assembly name="EnvDTE" #>
+<#@ Assembly Name="System.Windows.Forms.dll" #>
+<#@ Assembly name="System.Configuration"#>
+<#@ import namespace="System" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Diagnostics" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections" #>
+<#@ import namespace="System.Collections.Specialized"#>
+<#@ import namespace="System.Collections.Generic" #> 
+<#@ import namespace="System.Configuration" #>
+<#@ import namespace="System.Collections.Specialized" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+    using System;
+    using System.Collections.Specialized;
+    using System.Configuration;
+    using System.Diagnostics.CodeAnalysis;
+    
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
+<#
+        ExeConfigurationFileMap configFile = new ExeConfigurationFileMap();
+        configFile.ExeConfigFilename = GetConfigPath();
+
+        if (string.IsNullOrEmpty(configFile.ExeConfigFilename)){
+            throw new ArgumentNullException("The project does not contain App.config or Web.config file.");
+        }
+
+        var config = System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(configFile, ConfigurationUserLevel.None);
+        var appSettings = GetAppSettings(config.AppSettings.Settings);
+
+    #>
+    
+    /// <summary>
+    /// Provides staticly-typed access to the appSettings values.
+    /// This class is dynamically created.  Do not modify directly.
+    /// </summary>
+    public partial class ConfigAppSettings : IConfigAppSettings
+    {
+        <#
+    foreach(var setting in appSettings){
+#><#=GetCommentHeaderForProperty(setting)#>
+        public virtual <#= GetAppSettingReturn(setting.Value) #> <#= GetSettingName(setting.Key) #>
+        {
+            get
+            {
+                string configKeyString = this.GetConfigSetting("<#=setting.Key#>");
+                return <#=GetAppSettingConvertFunction(setting.Value)#>(configKeyString);
+            }
+        }
+        <#
+#>
+
+        <#
+        }
+
+        #>/// <summary>
+        /// Gets the configuration setting.
+        /// </summary>
+        /// <param name="settingName">Name of the setting.</param>
+        /// <returns>The string value of the appSetting</returns>
+        /// <exception cref="ConfigurationException">
+        /// Invalid configuration setting:  + settingName
+        /// or
+        /// Invalid configuration setting:  + settingName
+        /// or
+        /// Invalid configuration. Required AppSettings section is missing.
+        /// </exception>
+        public virtual NameValueCollection AppSettings
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings;
+            }
+        }
+        
+        /// <summary>
+        /// Gets the configuration setting.
+        /// </summary>
+        /// <param name="settingName">Name of the setting.</param>
+        /// <returns>The string value of the appSetting</returns>
+        /// <exception cref="ConfigurationException">
+        /// Invalid configuration setting:  + settingName
+        /// or
+        /// Invalid configuration setting:  + settingName
+        /// or
+        /// Invalid configuration. Required AppSettings section is missing.
+        /// </exception>
+        private string GetConfigSetting(string settingName)
+        {
+            if ((ConfigurationManager.AppSettings != null) && (ConfigurationManager.AppSettings.Count != 0))
+            {
+                try
+                {
+                    var value = ConfigurationManager.AppSettings.Get(settingName);
+                    if (value == null)
+                    {
+                        throw new ConfigurationErrorsException("Invalid configuration setting: " + settingName);
+                    }
+
+                    return value;
+                }
+                catch
+                {
+                    throw new ConfigurationErrorsException("Invalid configuration setting: " + settingName);
+                }
+            }
+            else
+            {
+                throw new ConfigurationErrorsException("Invalid configuration. Required AppSettings section is missing.");
+            }
+        }
+    }
+    
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
+    
+    /// <summary>
+    /// Provides staticly-typed access to the appSettings values.
+    /// This class is dynamically created.  Do not modify directly.
+    /// </summary>
+    public interface IConfigAppSettings
+    {
+    <#
+    foreach(var setting in appSettings){
+#>    <#=GetCommentHeaderForProperty(setting)#>
+        <#= GetAppSettingReturn(setting.Value) #> <#= GetSettingName(setting.Key) #>
+        {
+            get;
+        }
+
+<##>    <#
+}#>}
+}<#+
+     public EnvDTE.Project GetCurrentProject()  {
+  
+        IServiceProvider ServiceProvider = (IServiceProvider)Host;
+        if (ServiceProvider == null)
+            throw new Exception("Host property returned unexpected value (null)");
+        
+        EnvDTE.DTE dte = (EnvDTE.DTE)ServiceProvider.GetService(typeof(EnvDTE.DTE));
+        if (dte == null)
+            throw new Exception("Unable to retrieve EnvDTE.DTE");
+        
+        Array activeSolutionProjects = (Array)dte.ActiveSolutionProjects;
+        if (activeSolutionProjects == null)
+            throw new Exception("DTE.ActiveSolutionProjects returned null");
+        
+        EnvDTE.Project dteProject = (EnvDTE.Project)activeSolutionProjects.GetValue(0);
+        if (dteProject == null)
+            throw new Exception("DTE.ActiveSolutionProjects[0] returned null");
+        
+        return dteProject;
+
+    }
+    private string GetProjectPath()
+    {
+        EnvDTE.Project project = GetCurrentProject();
+        System.IO.FileInfo info = new System.IO.FileInfo(project.FullName);
+        return info.Directory.FullName;
+    }
+  private string GetConfigPath()
+    {
+        EnvDTE.Project project = GetCurrentProject();
+        foreach (EnvDTE.ProjectItem item in project.ProjectItems)
+        {
+            // if it is the app.config file, then open it up
+            if (item.Name.Equals("App.config",StringComparison.InvariantCultureIgnoreCase) || item.Name.Equals("Web.config",StringComparison.InvariantCultureIgnoreCase))
+                return GetProjectPath() + "\\" + item.Name;
+        }
+        return String.Empty;
+    }
+    
+    public string GetDataDirectory(){
+        EnvDTE.Project project=GetCurrentProject();
+        return System.IO.Path.GetDirectoryName(project.FileName)+"\\App_Data\\";
+    }
+
+    public string GetSettingName(string setting){
+        Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+        setting = rgx.Replace(setting, "");
+
+		setting = setting.First().ToString().ToUpper() + setting.Substring(1);
+
+		return setting;
+
+    }
+
+	public string GetCommentHeaderForProperty(KeyValuePair<string,string> setting){
+		
+		var valueType = GetAppSettingReturn(setting.Value);
+		string comment = string.Empty;
+
+		if(valueType == "bool"){
+			comment = string.Format(@"/// <summary>
+        /// Gets a value indicating whether the appSetting '{0}' is true or false.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if '{0}' value is true; otherwise, <c>false</c>.
+        /// </value>", setting.Key);
+		}else{
+			comment = string.Format(@"/// <summary>
+        /// Gets the value of the '{0}' appSetting.
+        /// </summary>
+        /// <value>
+        /// '{0}' value.
+        /// </value>", setting.Key);
+
+
+		}
+
+		return comment;
+
+	}
+
+	public string GetAppSettingReturn(string settingValue){
+
+		bool boolValue;
+		var isBool = Boolean.TryParse(settingValue, out boolValue);
+		if(isBool)
+		{
+			return "bool";
+		}
+		
+
+		double doubleValue;
+		var doubleTest = settingValue.Replace(",", "");
+		var isDouble = Double.TryParse(doubleTest, out doubleValue);
+		if(isDouble && doubleTest.Contains("."))
+		{
+			return "double";
+		}
+
+		int intValue;
+		var intTest = settingValue.Replace(",", "");
+		var isInt = Int32.TryParse(intTest, out intValue);
+		if(isInt)
+		{
+			return "int";
+		}
+
+		return "string";
+	}
+
+	public string GetAppSettingConvertFunction(string settingValue){
+		
+		var settingReturnType = GetAppSettingReturn(settingValue);
+		
+		if(settingReturnType == "bool") return "Convert.ToBoolean";
+		if(settingReturnType == "int") return "Convert.ToInt32";
+		if(settingReturnType == "double") return "Convert.ToDouble";
+
+		return "Convert.ToString";
+
+	}
+    
+	public List<KeyValuePair<string,string>> GetAppSettings(KeyValueConfigurationCollection fullSettingsList){
+
+		List<KeyValuePair<string,string>> finalList = new List<KeyValuePair<string,string>>();
+		foreach(KeyValueConfigurationElement setting in fullSettingsList){
+			
+			if(!setting.Key.StartsWith("AppSettingAutoGen:")){
+				finalList.Add(new KeyValuePair<string,string>(setting.Key, setting.Value));
+			}
+		}
+
+		return finalList;
+	}
+#>
