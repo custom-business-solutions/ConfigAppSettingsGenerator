@@ -1,7 +1,17 @@
 ﻿<#
+
+		// After modifying the appSettings in Web.Config,
+		// right-click this template file in Solution Explorer
+		// and click "Run Custom Tool" to regenerate
+
 		// Set these values as needed
-		var namespaceName = "YourProject.NameSpace.Configuration";
-		var companyName = "Some Company";
+		var namespaceName = "Your.Own.Namespace";
+		var companyName = "Your Company";
+
+		// If you put this template in a project that doesn't directly contain the
+	    // Web.Config, you can use the configFileOverride variable to point this
+		// T4 template to the right Web.Config file. Url should be relative from this project
+		var configFileOverride = @"";
 #>
 <#@ template debug="true" hostSpecific="true" 
 #><#@include file="Include\MultipleOutputHelper.ttinclude"
@@ -21,7 +31,7 @@
 #><#@ import namespace="System.Text.RegularExpressions" #>
 <#
         ExeConfigurationFileMap configFile = new ExeConfigurationFileMap();
-        configFile.ExeConfigFilename = GetConfigPath();
+        configFile.ExeConfigFilename = GetConfigPath(configFileOverride);
 
         if (string.IsNullOrEmpty(configFile.ExeConfigFilename)){
             throw new ArgumentNullException("The project does not contain App.config or Web.config file.");
@@ -29,19 +39,18 @@
 
         var config = System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(configFile, ConfigurationUserLevel.None);
         var appSettings = GetAppSettings(config.AppSettings.Settings);
+		var currentYear = DateTime.Now.Year.ToString();
 
     #><# manager.StartNewFile("IConfigAppSettings.cs"); #>
 //-----------------------------------------------------------------------
 // <copyright file="IConfigAppSettings.cs" company="<#=companyName#>">
-//  Copyright (c) 2016 All Rights Reserved
+//  Copyright (c) <#=currentYear#> All Rights Reserved
 // </copyright>
 //-----------------------------------------------------------------------
 
 namespace <#=namespaceName#>
 {
-    using System;
     using System.Collections.Specialized;
-    using System.Configuration;
     using System.Diagnostics.CodeAnalysis;
 
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
@@ -62,7 +71,7 @@ namespace <#=namespaceName#>
 
 <##>    <#
 }#>    /// <summary>
-        /// Gets the configuration setting.
+        /// Gets the raw configuration settings.
         /// </summary>
         /// <param name="settingName">Name of the setting.</param>
         /// <returns>The string value of the appSetting</returns>
@@ -70,7 +79,7 @@ namespace <#=namespaceName#>
         /// Invalid configuration setting:  + settingName
         /// Invalid configuration. Required AppSettings section is missing.
         /// </exception>
-        NameValueCollection AppSettings
+        NameValueCollection AllAppSettings
         {
             get;
         }
@@ -79,7 +88,7 @@ namespace <#=namespaceName#>
 <# manager.EndBlock(); #>
 //-----------------------------------------------------------------------
 // <copyright file="ConfigAppSettings.cs" company="<#=companyName#>">
-//  Copyright (c) 2016 All Rights Reserved
+//  Copyright (c) <#=currentYear#> All Rights Reserved
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -116,7 +125,7 @@ namespace <#=namespaceName#>
         }
 
         #>/// <summary>
-        /// Gets the configuration setting.
+        /// Gets the raw configuration setting.
         /// </summary>
         /// <param name="settingName">Name of the setting.</param>
         /// <returns>The string value of the appSetting</returns>
@@ -124,7 +133,7 @@ namespace <#=namespaceName#>
         /// Invalid configuration setting:  + settingName
         /// Invalid configuration. Required AppSettings section is missing.
         /// </exception>
-        public virtual NameValueCollection AppSettings
+        public virtual NameValueCollection AllAppSettings
         {
             get
             {
@@ -198,15 +207,21 @@ namespace <#=namespaceName#>
         System.IO.FileInfo info = new System.IO.FileInfo(project.FullName);
         return info.Directory.FullName;
     }
-  private string GetConfigPath()
+    private string GetConfigPath(string configFileOverride=null)
     {
+		if(!string.IsNullOrEmpty(configFileOverride)){
+			return GetProjectPath() + configFileOverride;
+		}
+
         EnvDTE.Project project = GetCurrentProject();
+
         foreach (EnvDTE.ProjectItem item in project.ProjectItems)
         {
             // if it is the app.config file, then open it up
             if (item.Name.Equals("App.config",StringComparison.InvariantCultureIgnoreCase) || item.Name.Equals("Web.config",StringComparison.InvariantCultureIgnoreCase))
                 return GetProjectPath() + "\\" + item.Name;
         }
+		
         return String.Empty;
     }
     

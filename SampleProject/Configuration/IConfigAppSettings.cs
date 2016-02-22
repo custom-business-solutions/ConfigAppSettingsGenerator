@@ -1,14 +1,12 @@
 //-----------------------------------------------------------------------
-// <copyright file="IConfigAppSettings.cs" company="Some Company">
+// <copyright file="IConfigAppSettings.cs" company="Your Company">
 //  Copyright (c) 2016 All Rights Reserved
 // </copyright>
 //-----------------------------------------------------------------------
 
-namespace YourProject.NameSpace.Configuration
+namespace Your.Own.Namespace
 {
-    using System;
     using System.Collections.Specialized;
-    using System.Configuration;
     using System.Diagnostics.CodeAnalysis;
 
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
@@ -75,7 +73,7 @@ namespace YourProject.NameSpace.Configuration
         }
 
         /// <summary>
-        /// Gets the configuration setting.
+        /// Gets the raw configuration settings.
         /// </summary>
         /// <param name="settingName">Name of the setting.</param>
         /// <returns>The string value of the appSetting</returns>
@@ -83,7 +81,7 @@ namespace YourProject.NameSpace.Configuration
         /// Invalid configuration setting:  + settingName
         /// Invalid configuration. Required AppSettings section is missing.
         /// </exception>
-        NameValueCollection AppSettings
+        NameValueCollection AllAppSettings
         {
             get;
         }

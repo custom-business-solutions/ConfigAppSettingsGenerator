@@ -1,10 +1,10 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="ConfigAppSettings.cs" company="Some Company">
+// <copyright file="ConfigAppSettings.cs" company="Your Company">
 //  Copyright (c) 2016 All Rights Reserved
 // </copyright>
 //-----------------------------------------------------------------------
 
-namespace YourProject.NameSpace.Configuration
+namespace Your.Own.Namespace
 {
     using System;
     using System.Collections.Specialized;
@@ -95,7 +95,7 @@ namespace YourProject.NameSpace.Configuration
         }
         
         /// <summary>
-        /// Gets the configuration setting.
+        /// Gets the raw configuration setting.
         /// </summary>
         /// <param name="settingName">Name of the setting.</param>
         /// <returns>The string value of the appSetting</returns>
@@ -103,7 +103,7 @@ namespace YourProject.NameSpace.Configuration
         /// Invalid configuration setting:  + settingName
         /// Invalid configuration. Required AppSettings section is missing.
         /// </exception>
-        public virtual NameValueCollection AppSettings
+        public virtual NameValueCollection AllAppSettings
         {
             get
             {
