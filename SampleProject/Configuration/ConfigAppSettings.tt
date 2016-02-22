@@ -1,32 +1,24 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="ConfigAppSettings.cs" company="Some Company">
-//  Copyright (c) 2016 All Rights Reserved
-// </copyright>
-//-----------------------------------------------------------------------
-
-namespace YourProject.NameSpace.Configuration
-{<#@ template debug="true" hostSpecific="true" #>
-<#@ output extension=".cs" #>
-<#@ Assembly Name="System.Core.dll" #>
-<#@ assembly name="EnvDTE" #>
-<#@ Assembly Name="System.Windows.Forms.dll" #>
-<#@ Assembly name="System.Configuration"#>
-<#@ import namespace="System" #>
-<#@ import namespace="System.IO" #>
-<#@ import namespace="System.Diagnostics" #>
-<#@ import namespace="System.Linq" #>
-<#@ import namespace="System.Collections" #>
-<#@ import namespace="System.Collections.Specialized"#>
-<#@ import namespace="System.Collections.Generic" #> 
-<#@ import namespace="System.Configuration" #>
-<#@ import namespace="System.Collections.Specialized" #>
-<#@ import namespace="System.Text.RegularExpressions" #>
-    using System;
-    using System.Collections.Specialized;
-    using System.Configuration;
-    using System.Diagnostics.CodeAnalysis;
-    
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
+﻿<#
+		// Set these values as needed
+		var namespaceName = "YourProject.NameSpace.Configuration";
+		var companyName = "Some Company";
+#>
+<#@ template debug="true" hostSpecific="true" 
+#><#@include file="Include\MultipleOutputHelper.ttinclude"
+#><# var manager = Manager.Create(Host, GenerationEnvironment);
+#><#@ output extension=".cs" #><#@ assembly name="EnvDTE" 
+#><#@ Assembly Name="System.Windows.Forms.dll"
+#><#@ Assembly name="System.Configuration"
+#><#@ import namespace="System" 
+#><#@ import namespace="System.IO"
+#><#@ import namespace="System.Diagnostics"
+#><#@ import namespace="System.Linq"
+#><#@ import namespace="System.Collections"
+#><#@ import namespace="System.Collections.Specialized"
+#><#@ import namespace="System.Collections.Generic"
+#><#@ import namespace="System.Configuration"
+#><#@ import namespace="System.Collections.Specialized"
+#><#@ import namespace="System.Text.RegularExpressions" #>
 <#
         ExeConfigurationFileMap configFile = new ExeConfigurationFileMap();
         configFile.ExeConfigFilename = GetConfigPath();
@@ -38,8 +30,68 @@ namespace YourProject.NameSpace.Configuration
         var config = System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(configFile, ConfigurationUserLevel.None);
         var appSettings = GetAppSettings(config.AppSettings.Settings);
 
-    #>
+    #><# manager.StartNewFile("IConfigAppSettings.cs"); #>
+//-----------------------------------------------------------------------
+// <copyright file="IConfigAppSettings.cs" company="<#=companyName#>">
+//  Copyright (c) 2016 All Rights Reserved
+// </copyright>
+//-----------------------------------------------------------------------
+
+namespace <#=namespaceName#>
+{
+    using System;
+    using System.Collections.Specialized;
+    using System.Configuration;
+    using System.Diagnostics.CodeAnalysis;
+
+[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
     
+    /// <summary>
+    /// Provides staticly-typed access to the appSettings values.
+    /// This class is dynamically created.  Do not modify directly.
+    /// </summary>
+    public interface IConfigAppSettings
+    {
+    <#
+    foreach(var setting in appSettings){
+#>    <#=GetCommentHeaderForProperty(setting)#>
+        <#= GetAppSettingReturn(setting.Value) #> <#= GetSettingName(setting.Key) #>
+        {
+            get;
+        }
+
+<##>    <#
+}#>    /// <summary>
+        /// Gets the configuration setting.
+        /// </summary>
+        /// <param name="settingName">Name of the setting.</param>
+        /// <returns>The string value of the appSetting</returns>
+        /// <exception cref="ConfigurationException">
+        /// Invalid configuration setting:  + settingName
+        /// Invalid configuration. Required AppSettings section is missing.
+        /// </exception>
+        NameValueCollection AppSettings
+        {
+            get;
+        }
+    }
+}
+<# manager.EndBlock(); #>
+//-----------------------------------------------------------------------
+// <copyright file="ConfigAppSettings.cs" company="<#=companyName#>">
+//  Copyright (c) 2016 All Rights Reserved
+// </copyright>
+//-----------------------------------------------------------------------
+
+namespace <#=namespaceName#>
+{
+    using System;
+    using System.Collections.Specialized;
+    using System.Configuration;
+    using System.Diagnostics.CodeAnalysis;
+
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
+
     /// <summary>
     /// Provides staticly-typed access to the appSettings values.
     /// This class is dynamically created.  Do not modify directly.
@@ -70,9 +122,6 @@ namespace YourProject.NameSpace.Configuration
         /// <returns>The string value of the appSetting</returns>
         /// <exception cref="ConfigurationException">
         /// Invalid configuration setting:  + settingName
-        /// or
-        /// Invalid configuration setting:  + settingName
-        /// or
         /// Invalid configuration. Required AppSettings section is missing.
         /// </exception>
         public virtual NameValueCollection AppSettings
@@ -120,26 +169,8 @@ namespace YourProject.NameSpace.Configuration
             }
         }
     }
-    
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed.")]
-    
-    /// <summary>
-    /// Provides staticly-typed access to the appSettings values.
-    /// This class is dynamically created.  Do not modify directly.
-    /// </summary>
-    public interface IConfigAppSettings
-    {
-    <#
-    foreach(var setting in appSettings){
-#>    <#=GetCommentHeaderForProperty(setting)#>
-        <#= GetAppSettingReturn(setting.Value) #> <#= GetSettingName(setting.Key) #>
-        {
-            get;
-        }
-
-<##>    <#
-}#>}
-}<#+
+}<# manager.Process(true); #>
+<#+
      public EnvDTE.Project GetCurrentProject()  {
   
         IServiceProvider ServiceProvider = (IServiceProvider)Host;

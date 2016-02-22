@@ -43,9 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Configuration\Include\MultipleOutputHelper.ttinclude" />
     <Compile Include="Configuration\ConfigAppSettings.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <DependentUpon>ConfigAppSettings.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Configuration\IConfigAppSettings.cs">
       <DependentUpon>ConfigAppSettings.tt</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
